@@ -60,21 +60,17 @@ jobs:
           echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "Extracted version: $TAG_NAME"
       
-      - name: Update pubspec.yaml version
+      - name: Update version in pubspec.yaml
         run: |
-          VERSION=${{ steps.version.outputs.version }}
-          # Extract version name and code (e.g., "1.0.1+2" -> version="1.0.1" code="2")
+          VERSION=${{ needs.version.outputs.version }}
           if [[ "$VERSION" == *"+"* ]]; then
-            # Tag includes build number (e.g., v1.0.1+2)
             sed -i "s/^version: .*/version: $VERSION/" pubspec.yaml
           else
-            # Tag only has version name (e.g., v1.0.1), auto-increment build number
-            CURRENT_BUILD=$(grep "^version:" pubspec.yaml | sed 's/.*+//')
-            NEW_BUILD=$((CURRENT_BUILD + 1))
-            sed -i "s/^version: .*/version: ${VERSION}+${NEW_BUILD}/" pubspec.yaml
+            # Use GitHub run number to ensure a strictly increasing build number (versionCode)
+            # This avoids the issue where using the static pubspec.yaml always results in the same build number (e.g., 2 -> 2002).
+            BUILD_NUMBER=$(( 3000 + ${{ github.run_number }} ))
+            sed -i "s/^version: .*/version: ${VERSION}+${BUILD_NUMBER}/" pubspec.yaml
           fi
-          echo "Updated pubspec.yaml version:"
-          grep "^version:" pubspec.yaml
       
       - name: Decode keystore
         env:
