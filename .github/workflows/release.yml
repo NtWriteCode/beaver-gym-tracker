@@ -62,7 +62,7 @@ jobs:
       
       - name: Update version in pubspec.yaml
         run: |
-          VERSION=${{ needs.version.outputs.version }}
+          VERSION=${{ steps.version.outputs.version }}
           if [[ "$VERSION" == *"+"* ]]; then
             sed -i "s/^version: .*/version: $VERSION/" pubspec.yaml
           else
