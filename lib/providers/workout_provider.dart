@@ -198,6 +198,8 @@ class WorkoutProvider with ChangeNotifier {
       startDateTime: DateTime.now(),
       exerciseIds: newExerciseIds,
       customTitle: template.name, // Pre-fill title with template name
+      sourceTemplateId: template.id, // Track which template this came from
+      sourceTemplateName: template.name, // Track template name
     );
     
     _activeWorkout = newWorkout;
@@ -296,7 +298,7 @@ class WorkoutProvider with ChangeNotifier {
     return newIds;
   }
 
-  Future<void> saveAsTemplate(Workout workout, String name) async {
+  Future<void> saveAsTemplate(Workout workout, String name, {String? overrideTemplateId}) async {
     final workoutExercises = workout.exerciseIds
         .map((id) => _exercises[id])
         .whereType<Exercise>()
@@ -305,13 +307,36 @@ class WorkoutProvider with ChangeNotifier {
     // Deep copy exercises for the template
     final templateExercises = workoutExercises.map((e) => e.copyWith(id: const Uuid().v4())).toList();
     
-    final newTemplate = WorkoutTemplate(
-      id: const Uuid().v4(),
-      name: name,
-      exercises: templateExercises,
-    );
+    // Check if we should override an existing template
+    if (overrideTemplateId != null) {
+      // Find and update the existing template
+      final existingIndex = _templates.indexWhere((t) => t.id == overrideTemplateId);
+      if (existingIndex != -1) {
+        // Override existing template with new exercises but keep the same ID
+        _templates[existingIndex] = WorkoutTemplate(
+          id: overrideTemplateId,
+          name: name,
+          exercises: templateExercises,
+        );
+      } else {
+        // Template not found, create new one
+        final newTemplate = WorkoutTemplate(
+          id: const Uuid().v4(),
+          name: name,
+          exercises: templateExercises,
+        );
+        _templates.add(newTemplate);
+      }
+    } else {
+      // Create new template
+      final newTemplate = WorkoutTemplate(
+        id: const Uuid().v4(),
+        name: name,
+        exercises: templateExercises,
+      );
+      _templates.add(newTemplate);
+    }
     
-    _templates.add(newTemplate);
     await _saveTemplates();
     await checkAchievements();
     notifyListeners();

@@ -255,20 +255,37 @@ class _WorkoutSummaryDialogState extends State<WorkoutSummaryDialog> {
   }
 
   void _showSaveTemplateDialog(BuildContext context, WorkoutProvider provider) {
-    final controller = TextEditingController(text: widget.workout.customTitle ?? '');
+    // Pre-fill with source template name if this workout was created from a template
+    final defaultName = widget.workout.sourceTemplateName ?? widget.workout.customTitle ?? '';
+    final controller = TextEditingController(text: defaultName);
     
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Save as Template'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Template Name',
-            hintText: 'e.g., Push Day',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Template Name',
+                hintText: 'e.g., Push Day',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            if (widget.workout.sourceTemplateName != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                'This workout was created from "${widget.workout.sourceTemplateName}". Using the same name will update that template.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(
@@ -279,10 +296,22 @@ class _WorkoutSummaryDialogState extends State<WorkoutSummaryDialog> {
             onPressed: () {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                provider.saveAsTemplate(widget.workout, name);
+                // Check if we should override the source template
+                String? overrideId;
+                if (widget.workout.sourceTemplateId != null && 
+                    name == widget.workout.sourceTemplateName) {
+                  // Same name as source template - override it
+                  overrideId = widget.workout.sourceTemplateId;
+                }
+                
+                provider.saveAsTemplate(widget.workout, name, overrideTemplateId: overrideId);
                 Navigator.pop(dialogContext);
+                
+                final message = overrideId != null 
+                    ? 'Updated template: $name'
+                    : 'Saved template: $name';
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Saved template: $name')),
+                  SnackBar(content: Text(message)),
                 );
               }
             },

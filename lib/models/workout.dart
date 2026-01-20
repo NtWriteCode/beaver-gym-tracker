@@ -9,6 +9,8 @@ class Workout {
   int? estimatedCalories; // Estimated calories burned
   bool isCaloriesManuallySet; // Whether user manually set calories
   int rpe; // Rate of Perceived Exertion (1-10)
+  String? sourceTemplateId; // ID of template this workout was created from
+  String? sourceTemplateName; // Name of template this workout was created from
 
   Workout({
     required this.id,
@@ -21,6 +23,8 @@ class Workout {
     this.estimatedCalories,
     this.isCaloriesManuallySet = false,
     this.rpe = 5,
+    this.sourceTemplateId,
+    this.sourceTemplateName,
   }) : exerciseIds = exerciseIds ?? [];
 
   Map<String, dynamic> toJson() => {
@@ -34,6 +38,8 @@ class Workout {
         'estimatedCalories': estimatedCalories,
         'isCaloriesManuallySet': isCaloriesManuallySet,
         'rpe': rpe,
+        'sourceTemplateId': sourceTemplateId,
+        'sourceTemplateName': sourceTemplateName,
       };
 
   factory Workout.fromJson(Map<String, dynamic> json) => Workout(
@@ -51,6 +57,8 @@ class Workout {
         estimatedCalories: json['estimatedCalories'],
         isCaloriesManuallySet: json['isCaloriesManuallySet'] ?? false,
         rpe: json['rpe'] ?? 5,
+        sourceTemplateId: json['sourceTemplateId'],
+        sourceTemplateName: json['sourceTemplateName'],
       );
 
   Workout copyWith({
@@ -63,6 +71,8 @@ class Workout {
     int? estimatedCalories,
     bool? isCaloriesManuallySet,
     int? rpe,
+    String? sourceTemplateId,
+    String? sourceTemplateName,
   }) {
     return Workout(
       id: id,
@@ -75,6 +85,8 @@ class Workout {
       estimatedCalories: estimatedCalories ?? this.estimatedCalories,
       isCaloriesManuallySet: isCaloriesManuallySet ?? this.isCaloriesManuallySet,
       rpe: rpe ?? this.rpe,
+      sourceTemplateId: sourceTemplateId ?? this.sourceTemplateId,
+      sourceTemplateName: sourceTemplateName ?? this.sourceTemplateName,
     );
   }
 
