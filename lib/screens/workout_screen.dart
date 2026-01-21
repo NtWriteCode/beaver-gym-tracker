@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/workout_provider.dart';
 import '../models/workout_template.dart';
 import 'workout_editor_screen.dart';
@@ -22,6 +23,9 @@ class WorkoutScreen extends StatelessWidget {
         final templates = provider.templates;
 
         if (active != null) {
+          final dateText = DateFormat('EEE, MMM d').format(active.startDateTime);
+          final timeText = DateFormat('HH:mm').format(active.startDateTime);
+
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -41,7 +45,7 @@ class WorkoutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Started at ${active.startDateTime.hour}:${active.startDateTime.minute.toString().padLeft(2, '0')}',
+                  'Started on $dateText at $timeText',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
