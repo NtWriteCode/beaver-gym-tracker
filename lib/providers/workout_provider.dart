@@ -274,8 +274,8 @@ class WorkoutProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<String>> finishWorkout() async {
-    if (_activeWorkout == null) return [];
+  Future<({Workout workout, List<String> achievements})?> finishWorkout() async {
+    if (_activeWorkout == null) return null;
     
     final finishedWorkout = _activeWorkout!.copyWith(
       isFinished: true,
@@ -295,7 +295,7 @@ class WorkoutProvider with ChangeNotifier {
     final newIds = postAchievements.difference(preAchievements).toList();
     
     notifyListeners();
-    return newIds;
+    return (workout: finishedWorkout, achievements: newIds);
   }
 
   Future<void> saveAsTemplate(Workout workout, String name, {String? overrideTemplateId}) async {
