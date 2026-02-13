@@ -452,79 +452,106 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                         ),
                       )
                     else
-                      ListView.separated(
+                      ReorderableListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: workoutProvider.activeWorkoutExercises.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        buildDefaultDragHandles: false,
+                        onReorder: (oldIndex, newIndex) {
+                          if (newIndex > oldIndex) newIndex -= 1;
+                          final List<String> items = List.from(workout.exerciseIds);
+                          final String item = items.removeAt(oldIndex);
+                          items.insert(newIndex, item);
+                          workoutProvider.updateActiveWorkout(workout.copyWith(exerciseIds: items));
+                        },
                         itemBuilder: (context, index) {
                           final exercise = workoutProvider.activeWorkoutExercises[index];
-                          return ListTile(
-                            leading: CircleAvatar(
-                              child: Text('${index + 1}'),
-                            ),
-                            title: Text(
-                              exercise.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Wrap(
-                                  spacing: 4,
-                                  runSpacing: 4,
-                                  children: exercise.sets.map((set) => Chip(
-                                    label: Text(
-                                      exercise.type == ExerciseType.gym 
-                                          ? '${set.weightKg}kg × ${set.reps}' 
-                                          : '${set.distanceKm}km in ${set.durationMinutes}min', 
-                                      style: const TextStyle(fontSize: 10)
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    visualDensity: VisualDensity.compact,
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  )).toList(),
+                          return Column(
+                            key: ValueKey(exercise.id),
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: ReorderableDragStartListener(
+                                  index: index,
+                                  child: const Icon(Icons.drag_handle),
                                 ),
-                                if (exercise.type == ExerciseType.gym && exercise.durationMinutes > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4.0),
-                                    child: Text('${exercise.durationMinutes} min', style: Theme.of(context).textTheme.bodySmall),
-                                  ),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Remove Exercise'),
-                                    content: Text('Remove "${exercise.name}" from this workout?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
+                                title: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 14,
+                                      child: Text('${index + 1}', style: const TextStyle(fontSize: 12)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        exercise.name,
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
                                       ),
-                                      TextButton(
-                                        onPressed: () {
-                                          workoutProvider.removeExerciseFromWorkout(exercise.id);
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Remove'),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      spacing: 4,
+                                      runSpacing: 4,
+                                      children: exercise.sets.map((set) => Chip(
+                                        label: Text(
+                                          exercise.type == ExerciseType.gym 
+                                              ? '${set.weightKg}kg × ${set.reps}' 
+                                              : '${set.distanceKm}km in ${set.durationMinutes}min', 
+                                          style: const TextStyle(fontSize: 10)
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        visualDensity: VisualDensity.compact,
+                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      )).toList(),
+                                    ),
+                                    if (exercise.type == ExerciseType.gym && exercise.durationMinutes > 0)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4.0),
+                                        child: Text('${exercise.durationMinutes} min', style: Theme.of(context).textTheme.bodySmall),
                                       ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => EditExerciseDialog(exercise: exercise),
-                              );
-                            },
-                            isThreeLine: true,
+                                  ],
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Remove Exercise'),
+                                        content: Text('Remove "${exercise.name}" from this workout?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              workoutProvider.removeExerciseFromWorkout(exercise.id);
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Remove'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => EditExerciseDialog(exercise: exercise),
+                                  );
+                                },
+                                isThreeLine: true,
+                              ),
+                              if (index < workoutProvider.activeWorkoutExercises.length - 1)
+                                const Divider(height: 1),
+                            ],
                           );
                         },
                       ),
